@@ -1,34 +1,37 @@
+const { SlashCommandBuilder } = require('discord.js');
 const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
-const { AudioPlayerStatus, createAudioPlayer, createAudioResource, VoiceConnectionStatus, joinVoiceChannel } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus } = require('@discordjs/voice');
 
-async function jouerAudioDansSalons(client) {
-  const guild = client.guilds.cache.get(guildId);  // Récupère le serveur
-  const categoryChannels = guild.channels.cache.filter(channel => 
-    (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) && channel.type === 'GUILD_VOICE'
-  );
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('sonnerie')
+    .setDescription('Déclenche manuellement la sonnerie dans les salons vocaux'),
 
-  // Récupérer tous les salons vocaux dans les catégories cibles ou salons spécifiques
-  categoryChannels.forEach(async (channel) => {
-    if (channel.type === 'GUILD_VOICE') {
+  async execute(interaction) {
+    const guild = interaction.client.guilds.cache.get(guildId);
+
+    const categoryChannels = guild.channels.cache.filter(channel =>
+      (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) &&
+      channel.type === 2 // Type 2 = GUILD_VOICE
+    );
+
+    for (const channel of categoryChannels.values()) {
+      if (channel.members.size === 0) continue;
+
       const connection = joinVoiceChannel({
         channelId: channel.id,
         guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
+        adapterCreator: guild.voiceAdapterCreator
       });
 
-      // Assure-toi de jouer l'audio ou de faire une action ici
       connection.on(VoiceConnectionStatus.Ready, () => {
         const player = createAudioPlayer();
-        const resource = createAudioResource('chemin_vers_audio.mp3'); // Remplace par le chemin de ton audio
-
+        const resource = createAudioResource('sonnerie.mp3'); // Remplace ici
         player.play(resource);
         connection.subscribe(player);
       });
-
-      // Envoi un message de confirmation (facultatif)
-      console.log(`🔔 La sonnerie a été jouée dans le salon : ${channel.name}`);
     }
-  });
-}
 
-module.exports = { jouerAudioDansSalons };
+    await interaction.reply({ content: '✅ Sonnerie lancée dans les salons vocaux.', ephemeral: true });
+  }
+};
