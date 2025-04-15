@@ -43,7 +43,19 @@ module.exports = {
         components: []
       });
 
-      await jouerSonnerie(interaction.client, type === 'sonnerie' ? null : type);
+      connection.on(VoiceConnectionStatus.Ready, () => {
+        const player = createAudioPlayer();
+        const audioPath = path.join(__dirname, '../audios/alarme_' + interaction.options.getString('type') + '.mp3');
+        const resource = createAudioResource(audioPath);
+
+        player.play(resource);
+        connection.subscribe(player);
+
+        // Déconnecte après la fin de l’audio
+        player.on('idle', () => {
+          connection.destroy();
+        });
+      });
     });
 
     collector.on('end', collected => {
