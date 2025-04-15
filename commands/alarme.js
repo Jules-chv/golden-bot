@@ -1,33 +1,24 @@
-const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
-const { jouerAlarme } = require('../utils/sonnerie');
+const { SlashCommandBuilder } = require('discord.js');
+const { jouerSonnerie } = require('../utils/sonnerie');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('alarme')
     .setDescription('Déclenche une alarme dans les salles vocales'),
 
-  async execute(interaction) {
-    const embed = new EmbedBuilder()
-      .setTitle('Choix de l\'alarme')
-      .setDescription('Sélectionne une alarme à déclencher dans toutes les salles vocales.')
-      .setColor('Red');
+  async execute(interaction, client) {
+    try {
+      // Réponse initiale
+      await interaction.reply({
+        content: '🚨 Alarme déclenchée !',
+        ephemeral: true, // Message visible uniquement pour l'utilisateur
+      });
 
-    const menu = new StringSelectMenuBuilder()
-      .setCustomId('choix_alarme')
-      .setPlaceholder('Choisis une alarme')
-      .addOptions([
-        { label: 'Incendie', value: 'incendie', emoji: '🔥' },
-        { label: 'Intrusion', value: 'intrusion', emoji: '🕵️‍♂️' },
-        { label: 'Tsunami', value: 'tsunami', emoji: '🌊' },
-        { label: 'Nucléaire', value: 'nucleaire', emoji: '☢️' }
-      ]);
-
-    const row = new ActionRowBuilder().addComponents(menu);
-
-    await interaction.reply({
-      embeds: [embed],
-      components: [row],
-      ephemeral: true
-    });
+      // Appel de la fonction de sonnerie
+      await jouerSonnerie(client);
+    } catch (error) {
+      console.error("Erreur lors de l'exécution de /alarme : ", error);
+      await interaction.reply({ content: 'Une erreur s\'est produite.', ephemeral: true });
+    }
   }
 };
