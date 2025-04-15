@@ -70,16 +70,13 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-  const command = client.commands.get(interaction.commandName);
-  if (command) {
-    try {
-      await command.execute(interaction, client);
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({ content: 'Erreur lors de l\'exécution.', ephemeral: true });
-    }
+  if (interaction.isStringSelectMenu() && interaction.customId === 'choix_alarme') {
+    const alarme = interaction.values[0];
+    await interaction.update({ content: `🚨 Alarme **${alarme}** déclenchée !`, components: [], embeds: [] });
+    const { jouerAlarme } = require('./utils/sonnerie');
+    await jouerAlarme(client, alarme);
   }
 });
+
 
 client.login(process.env.TOKEN);
