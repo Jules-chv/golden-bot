@@ -1,5 +1,6 @@
 {
   "categorieCible": ["1268127739005632512"],
-  "salonsSpecifiques": ["1273772976281485322"],
-  "salonRappel": "1273772975501606962"  // Remplace par l'ID de ton salon textuel de rappel
+  "salonsSpecifiques": ["1273772955910013094"],
+  "sonnerieRoleId": "1361681844093063360",
+  "salonRappelId": "1273772975501606962"
 }
