@@ -2,9 +2,8 @@ require('dotenv').config();
 const fs = require('fs');
 const express = require('express');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus } = require('@discordjs/voice');
-const cron = require('node-cron');
 const { jouerSonnerie } = require('./utils/sonnerie');
+const cron = require('node-cron');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot actif !'));
@@ -21,30 +20,53 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-// Enregistrement des commandes Slash dès que le bot est prêt
 client.once('ready', async () => {
   console.log(`🟢 Connecté en tant que ${client.user.tag}`);
-  
-  const guildId = '1267913236221792367'; // Remplace par ton ID de serveur (Guild)
 
-  // Crée la commande /alarme
+  const guildId = '1267913236221792367';
+
   const data = [
     {
       name: 'alarme',
-      description: 'Déclencher une alarme dans toutes les salles'
+      description: 'Déclencher une alarme dans les salles vocales',
+      options: [
+        {
+          name: 'type',
+          description: 'Type d\'alarme à déclencher',
+          type: 3,
+          required: true,
+          choices: [
+            { name: 'Incendie', value: 'incendie' },
+            { name: 'Intrusion', value: 'intrusion' },
+            { name: 'Tsunami', value: 'tsunami' },
+            { name: 'Nucléaire', value: 'nucleaire' }
+          ]
+        }
+      ]
+    },
+    {
+      name: 'sonnerie',
+      description: 'Déclenche manuellement la sonnerie (réservé)',
+      default_member_permissions: '0'
     }
   ];
 
   try {
-    // Enregistre la commande sur le serveur
     await client.guilds.cache.get(guildId).commands.set(data);
-    console.log('Commande /alarme enregistrée avec succès');
+    console.log('Commandes enregistrées avec succès');
   } catch (error) {
-    console.error('Erreur lors de l\'enregistrement de la commande :', error);
+    console.error('Erreur lors de l\'enregistrement des commandes :', error);
   }
 
-  // Configure le cron pour les sonneries
-  cron.schedule('0,30 14-17 * * *', () => jouerSonnerie(client));
+  cron.schedule('0,30 14-17,18 * * *', () => jouerSonnerie(client));
+
+  cron.schedule('45 13 * * 6,0', () => {
+    const config = require('./config.json');
+    const salon = client.channels.cache.get(config.salonRappel);
+    if (salon && salon.isTextBased()) {
+      salon.send('📣 Il y a cours à 14h00 ! Préparez-vous à rejoindre votre salle.');
+    }
+  });
 });
 
 client.on('interactionCreate', async interaction => {
