@@ -1,18 +1,31 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { jouerSonnerie } = require('../utils/sonnerie');
-const config = require('../config.json');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('sonnerie')
-    .setDescription('Déclenche manuellement la sonnerie dans les salles vocales'),
+    .setDescription('Déclenche la sonnerie dans les salles vocales'),
 
-  async execute(interaction) {
-    if (!interaction.member.roles.cache.has(config.sonnerieRoleId)) {
-      return interaction.reply({ content: '❌ Tu n’as pas la permission d’utiliser cette commande.', ephemeral: true });
+  async execute(interaction, client) {
+    const member = interaction.member;
+    const role = member.roles.cache.some(r => r.name === 'Ton rôle spécial'); // Vérifie si l'utilisateur a un rôle spécifique
+
+    if (!role) {
+      return interaction.reply({
+        content: "Tu n'as pas l'autorisation de déclencher la sonnerie.",
+        ephemeral: true,
+      });
     }
 
-    await interaction.reply({ content: '🔔 Sonnerie déclenchée !', ephemeral: true });
-    await jouerSonnerie(interaction.client);
-  }
+    await interaction.reply({
+      content: '🔔 Sonnerie déclenchée !',
+      ephemeral: true,
+    });
+
+    try {
+      await jouerSonnerie(client); // Déclenche la sonnerie
+    } catch (error) {
+      console.error("Erreur lors de l'exécution de /sonnerie : ", error);
+      await interaction.reply({ content: 'Une erreur s\'est produite.', ephemeral: true });
+    }
+  },
 };
