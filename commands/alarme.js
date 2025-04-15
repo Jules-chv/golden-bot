@@ -45,7 +45,7 @@ module.exports = {
 
       connection.on(VoiceConnectionStatus.Ready, () => {
         const player = createAudioPlayer();
-        const audioPath = path.join(__dirname, '../audios/alarme_' + interaction.options.getString('type') + '.mp3');
+        const audioPath = path.join(__dirname, '../sounds/alarms/alarme_' + interaction.options.getString('type') + '.mp3');
         const resource = createAudioResource(audioPath);
 
         player.play(resource);
