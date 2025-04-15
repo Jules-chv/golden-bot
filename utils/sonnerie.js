@@ -1,9 +1,9 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus } = require('@discordjs/voice');
 const config = require('../config.json');
+const path = require('path');
 
-const jouerSonnerie = async (client) => {
+const getSalonsVocauxCibles = (client) => {
   const salons = [];
-
   client.guilds.cache.forEach(guild => {
     guild.channels.cache.forEach(channel => {
       if (
@@ -15,6 +15,11 @@ const jouerSonnerie = async (client) => {
       }
     });
   });
+  return salons;
+};
+
+const jouerAudioDansSalons = async (client, fichierAudio) => {
+  const salons = getSalonsVocauxCibles(client);
 
   for (const salon of salons) {
     const connection = joinVoiceChannel({
@@ -24,7 +29,7 @@ const jouerSonnerie = async (client) => {
     });
 
     const player = createAudioPlayer();
-    const resource = createAudioResource('./sounds/sonnerie.mp3');
+    const resource = createAudioResource(path.join(__dirname, '..', 'sounds', 'alarms', fichierAudio));
     connection.subscribe(player);
     player.play(resource);
 
@@ -35,4 +40,13 @@ const jouerSonnerie = async (client) => {
   }
 };
 
-module.exports = { jouerSonnerie };
+const jouerSonnerie = async (client) => {
+  await jouerAudioDansSalons(client, 'sonnerie.mp3');
+};
+
+const jouerAlarme = async (client, alarme) => {
+  const fichier = `${alarme}.mp3`;
+  await jouerAudioDansSalons(client, fichier);
+};
+
+module.exports = { jouerSonnerie, jouerAlarme };
