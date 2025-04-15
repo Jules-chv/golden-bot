@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('fs');
 const express = require('express');
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { jouerSonnerie } = require('./utils/sonnerie');
+const { jouerSonnerie } = require('./utils/sonnerie', 'sonnerie');
 const cron = require('node-cron');
 
 const app = express();
