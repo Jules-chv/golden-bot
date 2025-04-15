@@ -7,7 +7,7 @@ module.exports = {
 
   async execute(interaction, client) {
     const member = interaction.member;
-    const role = member.roles.cache.some(r => r.id === 1361681844093063360);
+    const role = member.roles.cache.some(r => r.id === '1361681844093063360');
 
     if (!role) {
       return interaction.reply({
@@ -22,10 +22,13 @@ module.exports = {
     });
 
     try {
-      await jouerSonnerie(client); // Déclenche la sonnerie
+      await jouerSonnerie(client); // Assure-toi que cette fonction est bien définie et importée
     } catch (error) {
       console.error("Erreur lors de l'exécution de /sonnerie : ", error);
-      await interaction.reply({ content: 'Une erreur s\'est produite.', ephemeral: true });
+      await interaction.followUp({
+        content: 'Une erreur s\'est produite.',
+        ephemeral: true,
+      });
     }
   },
 };
