@@ -7,7 +7,7 @@ module.exports = {
 
   async execute(interaction, client) {
     const member = interaction.member;
-    const role = member.roles.cache.some(r => r.name === 'Gestionnaire Sonnerie');
+    const role = member.roles.cache.some(r => r.id === 1361681844093063360);
 
     if (!role) {
       return interaction.reply({
