@@ -23,7 +23,7 @@ for (const file of commandFiles) {
 client.once('ready', async () => {
   console.log(`🟢 Connecté en tant que ${client.user.tag}`);
 
-  const guildId = '1267913236221792367';
+  const guildId = '1361103770221674556';
 
   const data = [
     {
