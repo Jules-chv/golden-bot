@@ -1,50 +1,36 @@
-const {
-  createAudioPlayer,
-  createAudioResource,
-  joinVoiceChannel,
-  VoiceConnectionStatus,
-} = require('@discordjs/voice');
-const fs = require('fs');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, VoiceConnectionStatus, entersState } = require('@discordjs/voice');
 const path = require('path');
 const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
 
 async function jouerSonnerie(client, type = null) {
   const guild = client.guilds.cache.get(guildId);
-  if (!guild) return console.error("Serveur introuvable");
 
   const voiceChannels = guild.channels.cache.filter(channel =>
     (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) &&
-    channel.type === 2 && // 2 = GUILD_VOICE
-    channel.members.size > 0
+    channel.type === 2 // GUILD_VOICE
   );
 
-  const fileName = type ? `alarme_${type}.mp3` : 'sonnerie.mp3';
-  const audioPath = path.join(__dirname, '../audios', fileName);
-
-  if (!fs.existsSync(audioPath)) {
-    console.error(`Fichier audio manquant : ${audioPath}`);
-    return;
-  }
-
   for (const channel of voiceChannels.values()) {
+    if (channel.members.size === 0) continue;
+
+    const connection = joinVoiceChannel({
+      channelId: channel.id,
+      guildId: guild.id,
+      adapterCreator: guild.voiceAdapterCreator
+    });
+
     try {
-      const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
-      });
+      await entersState(connection, VoiceConnectionStatus.Ready, 5000);
 
-      connection.on(VoiceConnectionStatus.Ready, () => {
-        const player = createAudioPlayer();
-        const resource = createAudioResource(audioPath);
-        player.play(resource);
-        connection.subscribe(player);
+      const player = createAudioPlayer();
+      const fileName = type ? `alarme_${type}.mp3` : 'sonnerie.mp3';
+      const audioPath = path.join(__dirname, '../audios', fileName);
 
-        // Déconnexion après lecture (env. 10 sec)
-        setTimeout(() => connection.destroy(), 10000);
-      });
+      const resource = createAudioResource(audioPath);
+      player.play(resource);
+      connection.subscribe(player);
     } catch (error) {
-      console.error(`Erreur avec le salon vocal ${channel.name} : `, error);
+      console.error(`Erreur sur le salon ${channel.name} :`, error);
     }
   }
 }
