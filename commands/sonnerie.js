@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { jouerSonnerie } = require('../utils/sonnerie');
+const guild = client.guilds.cache.get(config.guildId);
 
 module.exports = {
   data: new SlashCommandBuilder()
