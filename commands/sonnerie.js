@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { jouerSonnerie } = require('../utils/sonnerie');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -6,29 +7,14 @@ module.exports = {
     .setDescription('Déclenche la sonnerie dans les salles vocales'),
 
   async execute(interaction, client) {
-    const member = interaction.member;
-    const role = member.roles.cache.some(r => r.id === '1361681844093063360');
+    // On répond D'ABORD à Discord
+    await interaction.reply({ content: '🔔 Sonnerie en cours !', ephemeral: true });
 
-    if (!role) {
-      return interaction.reply({
-        content: "Tu n'as pas l'autorisation de déclencher la sonnerie.",
-        ephemeral: true,
-      });
-    }
-
-    await interaction.reply({
-      content: '🔔 Sonnerie déclenchée !',
-      ephemeral: true,
-    });
-
+    // Puis on joue la sonnerie
     try {
-      await jouerSonnerie(client); // Assure-toi que cette fonction est bien définie et importée
-    } catch (error) {
-      console.error("Erreur lors de l'exécution de /sonnerie : ", error);
-      await interaction.followUp({
-        content: 'Une erreur s\'est produite.',
-        ephemeral: true,
-      });
+      await jouerSonnerie(client);
+    } catch (err) {
+      console.error(err);
     }
-  },
+  }
 };
