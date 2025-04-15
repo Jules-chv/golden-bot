@@ -76,13 +76,19 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async interaction => {
-  if (interaction.isStringSelectMenu() && interaction.customId === 'choix_alarme') {
-    const alarme = interaction.values[0];
-    await interaction.update({ content: `🚨 Alarme **${alarme}** déclenchée !`, components: [], embeds: [] });
-    const { jouerAlarme } = require('./utils/sonnerie');
-    await jouerAlarme(client, alarme);
+  if (!interaction.isCommand()) return;
+
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({ content: '❌ Une erreur est survenue lors de l’exécution de la commande.', ephemeral: true });
   }
 });
+
 
 
 client.login(process.env.TOKEN);
