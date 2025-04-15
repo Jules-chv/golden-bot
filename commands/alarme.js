@@ -6,19 +6,29 @@ module.exports = {
     .setName('alarme')
     .setDescription('Déclenche une alarme dans les salles vocales'),
 
-  async execute(interaction, client) {
+  async execute(interaction) {
     try {
-      // Réponse initiale
       await interaction.reply({
         content: '🚨 Alarme déclenchée !',
-        ephemeral: true, // Message visible uniquement pour l'utilisateur
+        ephemeral: true,
       });
 
-      // Appel de la fonction de sonnerie
-      await jouerSonnerie(client);
+      await jouerSonnerie(interaction.client);
     } catch (error) {
       console.error("Erreur lors de l'exécution de /alarme : ", error);
-      await interaction.reply({ content: 'Une erreur s\'est produite.', ephemeral: true });
+
+      // Utilise followUp si la réponse a déjà été envoyée
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: '❌ Une erreur s’est produite en déclenchant l’alarme.',
+          ephemeral: true,
+        });
+      } else {
+        await interaction.reply({
+          content: '❌ Une erreur s’est produite en déclenchant l’alarme.',
+          ephemeral: true,
+        });
+      }
     }
   }
 };
