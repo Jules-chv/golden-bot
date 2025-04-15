@@ -26,7 +26,13 @@ module.exports = {
 
       connection.on(VoiceConnectionStatus.Ready, () => {
         const player = createAudioPlayer();
-        const resource = createAudioResource('sonnerie.mp3'); // Remplace ici
+        const path = require('path');
+        const audioPath = type
+          ? path.join(__dirname, `../audios/alarme_${type}.mp3`)
+          : path.join(__dirname, '../audios/sonnerie.mp3');
+
+const resource = createAudioResource(audioPath);
+
         player.play(resource);
         connection.subscribe(player);
       });
