@@ -21,8 +21,29 @@ for (const file of commandFiles) {
   client.commands.set(command.data.name, command);
 }
 
-client.once('ready', () => {
+// Enregistrement des commandes Slash dès que le bot est prêt
+client.once('ready', async () => {
   console.log(`🟢 Connecté en tant que ${client.user.tag}`);
+  
+  const guildId = '1267913236221792367'; // Remplace par ton ID de serveur (Guild)
+
+  // Crée la commande /alarme
+  const data = [
+    {
+      name: 'alarme',
+      description: 'Déclencher une alarme dans toutes les salles'
+    }
+  ];
+
+  try {
+    // Enregistre la commande sur le serveur
+    await client.guilds.cache.get(guildId).commands.set(data);
+    console.log('Commande /alarme enregistrée avec succès');
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement de la commande :', error);
+  }
+
+  // Configure le cron pour les sonneries
   cron.schedule('0,30 14-17 * * *', () => jouerSonnerie(client));
 });
 
