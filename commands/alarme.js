@@ -23,7 +23,7 @@ module.exports = {
     await interaction.reply({
       content: '🛑 Choisis une alarme à déclencher :',
       components: [row],
-      ephemeral: true
+      flags: 64 // équivalent à "ephemeral: true"
     });
 
     const collector = interaction.channel.createMessageComponentCollector({
@@ -33,6 +33,10 @@ module.exports = {
     });
 
     collector.on('collect', async (selectInteraction) => {
+      if (selectInteraction.user.id !== interaction.user.id) {
+        return selectInteraction.reply({ content: "❌ Tu n'es pas autorisé à faire ça.", ephemeral: true });
+      }
+
       const type = selectInteraction.values[0];
       await selectInteraction.update({
         content: `✅ Alarme **${type}** déclenchée.`,
