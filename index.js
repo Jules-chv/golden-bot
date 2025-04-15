@@ -59,6 +59,12 @@ client.once('ready', async () => {
   }
 
   cron.schedule('0,30 14-17,18 * * *', () => jouerSonnerie(client));
+  cron.schedule('45 13 * * 6,0', () => {
+  const salon = client.channels.cache.get(config.salonRappelId);
+  if (salon && salon.isTextBased()) {
+    salon.send('📢 **Rappel : les cours commencent à 14h00 !** Soyez à l’heure dans vos salles !');
+  }
+});
 
   cron.schedule('45 13 * * 6,0', () => {
     const config = require('./config.json');
