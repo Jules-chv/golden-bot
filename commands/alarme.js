@@ -4,10 +4,15 @@ const { jouerSonnerie } = require('../utils/sonnerie');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('alarme')
-    .setDescription('Déclencher une alarme dans toutes les salles'),
-  
+    .setDescription('Déclenche une alarme dans les salles vocales'),
+
   async execute(interaction, client) {
-    await interaction.reply('🚨 Alarme déclenchée !');
-    jouerSonnerie(client);
+    await interaction.reply({ content: '🚨 Alarme déclenchée !', ephemeral: true });
+
+    try {
+      await jouerSonnerie(client); // Déclenche la vraie alarme après avoir répondu
+    } catch (error) {
+      console.error(error);
+    }
   }
 };
