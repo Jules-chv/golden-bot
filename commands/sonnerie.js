@@ -7,7 +7,7 @@ module.exports = {
 
   async execute(interaction, client) {
     const member = interaction.member;
-    const role = member.roles.cache.some(r => r.name === 'Ton rôle spécial'); // Vérifie si l'utilisateur a un rôle spécifique
+    const role = member.roles.cache.some(r => r.name === 'Gestionnaire Sonnerie');
 
     if (!role) {
       return interaction.reply({
