@@ -1,52 +1,52 @@
-const { joinVoiceChannel, createAudioPlayer, createAudioResource, entersState, AudioPlayerStatus } = require('@discordjs/voice');
-const config = require('../config.json');
+const {
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+  VoiceConnectionStatus,
+} = require('@discordjs/voice');
+const fs = require('fs');
 const path = require('path');
+const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
 
-const getSalonsVocauxCibles = (client) => {
-  const salons = [];
-  client.guilds.cache.forEach(guild => {
-    guild.channels.cache.forEach(channel => {
-      if (
-        (config.categorieCible.includes(channel.parentId) || config.salonsSpecifiques.includes(channel.id)) &&
-        channel.type === 2 &&
-        channel.members.size > 0
-      ) {
-        salons.push(channel);
-      }
-    });
-  });
-  return salons;
-};
+async function jouerSonnerie(client, type = null) {
+  const guild = client.guilds.cache.get(guildId);
+  if (!guild) return console.error("Serveur introuvable");
 
-const jouerAudioDansSalons = async (client, fichierAudio) => {
-  const salons = getSalonsVocauxCibles(client);
+  const voiceChannels = guild.channels.cache.filter(channel =>
+    (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) &&
+    channel.type === 2 && // 2 = GUILD_VOICE
+    channel.members.size > 0
+  );
 
-  for (const salon of salons) {
-    const connection = joinVoiceChannel({
-      channelId: salon.id,
-      guildId: salon.guild.id,
-      adapterCreator: salon.guild.voiceAdapterCreator
-    });
+  const fileName = type ? `alarme_${type}.mp3` : 'sonnerie.mp3';
+  const audioPath = path.join(__dirname, '../audios', fileName);
 
-    const player = createAudioPlayer();
-    const resource = createAudioResource(path.join(__dirname, '..', 'sounds', 'alarms', fichierAudio));
-    connection.subscribe(player);
-    player.play(resource);
-
-    await entersState(player, AudioPlayerStatus.Playing, 5000);
-    await new Promise(resolve => setTimeout(resolve, 5000));
-
-    connection.destroy();
+  if (!fs.existsSync(audioPath)) {
+    console.error(`Fichier audio manquant : ${audioPath}`);
+    return;
   }
-};
 
-const jouerSonnerie = async (client) => {
-  await jouerAudioDansSalons(client, 'sonnerie.mp3');
-};
+  for (const channel of voiceChannels.values()) {
+    try {
+      const connection = joinVoiceChannel({
+        channelId: channel.id,
+        guildId: guild.id,
+        adapterCreator: guild.voiceAdapterCreator,
+      });
 
-const jouerAlarme = async (client, alarme) => {
-  const fichier = `${alarme}.mp3`;
-  await jouerAudioDansSalons(client, fichier);
-};
+      connection.on(VoiceConnectionStatus.Ready, () => {
+        const player = createAudioPlayer();
+        const resource = createAudioResource(audioPath);
+        player.play(resource);
+        connection.subscribe(player);
 
-module.exports = { jouerSonnerie, jouerAlarme };
+        // Déconnexion après lecture (env. 10 sec)
+        setTimeout(() => connection.destroy(), 10000);
+      });
+    } catch (error) {
+      console.error(`Erreur avec le salon vocal ${channel.name} : `, error);
+    }
+  }
+}
+
+module.exports = { jouerSonnerie };
