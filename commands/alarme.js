@@ -7,7 +7,10 @@ module.exports = {
     .setDescription('Déclenche une alarme dans les salles vocales'),
 
   async execute(interaction, client) {
-    await interaction.reply({ content: '🚨 Alarme déclenchée !', ephemeral: true });
+    await interaction.reply({
+      content: '🚨 Alarme déclenchée !',
+      flags: 64 // Message éphémère moderne (visible seulement par l'utilisateur)
+    });
 
     try {
       await jouerSonnerie(client); // Déclenche la vraie alarme après avoir répondu
