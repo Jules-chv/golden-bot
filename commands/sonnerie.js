@@ -1,6 +1,17 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, entersState, VoiceConnectionStatus } = require('@discordjs/voice');
+const {
+  guildId,
+  categorieCible,
+  salonsSpecifiques
+} = require('../config.json');
+const {
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
+  entersState,
+  VoiceConnectionStatus,
+  AudioPlayerStatus
+} = require('@discordjs/voice');
 const path = require('path');
 
 module.exports = {
@@ -27,6 +38,7 @@ module.exports = {
 
       try {
         await entersState(connection, VoiceConnectionStatus.Ready, 5000);
+        console.log(`🔊 Connecté à ${channel.name}`);
 
         const player = createAudioPlayer();
         const audioPath = path.join(__dirname, '../audios/sonnerie.mp3');
@@ -35,19 +47,28 @@ module.exports = {
         player.play(resource);
         connection.subscribe(player);
 
-        player.on('idle', () => {
+        player.on(AudioPlayerStatus.Playing, () => {
+          console.log(`▶️ Lecture en cours dans ${channel.name}`);
+        });
+
+        player.on(AudioPlayerStatus.Idle, () => {
+          console.log(`⏹️ Audio terminé dans ${channel.name}, déconnexion...`);
           connection.destroy();
         });
 
         player.on('error', error => {
-          console.error('Erreur audio :', error);
+          console.error(`❌ Erreur audio dans ${channel.name} :`, error);
+          connection.destroy();
         });
       } catch (error) {
-        console.error(`Erreur sur le salon ${channel.name} :`, error);
+        console.error(`❌ Erreur dans ${channel.name} :`, error);
         connection.destroy();
       }
     }
 
-    await interaction.reply({ content: '✅ Sonnerie lancée dans les salons vocaux.', ephemeral: true });
+    await interaction.reply({
+      content: '✅ Sonnerie lancée dans les salons vocaux.',
+      ephemeral: true
+    });
   }
 };
