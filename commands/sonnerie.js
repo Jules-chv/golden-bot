@@ -18,21 +18,27 @@ module.exports = {
   async execute(interaction) {
     const guild = interaction.client.guilds.cache.get(guildId);
 
-    // 🔥 Filtrer TOUS les vocaux dans les catégories cibles ou spécifiques
     const voiceChannels = guild.channels.cache.filter(channel =>
       channel.type === 2 && // GUILD_VOICE
       (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) &&
-      channel.members.size > 0 // salon vocal non vide
+      channel.members.size > 0 // Au moins un membre
     );
 
-    for (const channel of voiceChannels.values()) {
-      const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: guild.id,
-        adapterCreator: guild.voiceAdapterCreator,
+    if (voiceChannels.size === 0) {
+      return interaction.reply({
+        content: '⚠️ Aucun salon vocal filtré avec des membres connectés.',
+        ephemeral: true
       });
+    }
 
+    for (const channel of voiceChannels.values()) {
       try {
+        const connection = joinVoiceChannel({
+          channelId: channel.id,
+          guildId: guild.id,
+          adapterCreator: guild.voiceAdapterCreator
+        });
+
         await entersState(connection, VoiceConnectionStatus.Ready, 5000);
         console.log(`🔊 Connecté à ${channel.name}`);
 
@@ -40,30 +46,26 @@ module.exports = {
         const audioPath = path.join(__dirname, '../audios/sonnerie.mp3');
         const resource = createAudioResource(audioPath);
 
-        player.play(resource);
         connection.subscribe(player);
+        player.play(resource);
 
-        player.on(AudioPlayerStatus.Playing, () => {
-          console.log(`▶️ Lecture en cours dans ${channel.name}`);
-        });
-
-        player.on(AudioPlayerStatus.Idle, () => {
+        player.once(AudioPlayerStatus.Idle, () => {
           console.log(`⏹️ Audio terminé dans ${channel.name}, déconnexion...`);
           connection.destroy();
         });
 
-        player.on('error', (error) => {
+        player.on('error', error => {
           console.error(`❌ Erreur audio dans ${channel.name} :`, error);
           connection.destroy();
         });
+
       } catch (error) {
         console.error(`❌ Erreur dans ${channel.name} :`, error);
-        connection.destroy();
       }
     }
 
     await interaction.reply({
-      content: '✅ Sonnerie lancée dans les salons vocaux.',
+      content: `✅ Sonnerie lancée dans ${voiceChannels.size} salon(s) vocal(aux).`,
       ephemeral: true
     });
   }
