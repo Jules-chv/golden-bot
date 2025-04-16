@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
-const { createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource, joinVoiceChannel, entersState, VoiceConnectionStatus } = require('@discordjs/voice');
 const path = require('path');
 
 module.exports = {
@@ -25,7 +25,9 @@ module.exports = {
         adapterCreator: guild.voiceAdapterCreator,
       });
 
-      connection.on(VoiceConnectionStatus.Ready, () => {
+      try {
+        await entersState(connection, VoiceConnectionStatus.Ready, 5000);
+
         const player = createAudioPlayer();
         const audioPath = path.join(__dirname, '../audios/sonnerie.mp3');
         const resource = createAudioResource(audioPath);
@@ -33,11 +35,17 @@ module.exports = {
         player.play(resource);
         connection.subscribe(player);
 
-        // Déconnecte après la fin de l’audio
         player.on('idle', () => {
           connection.destroy();
         });
-      });
+
+        player.on('error', error => {
+          console.error('Erreur audio :', error);
+        });
+      } catch (error) {
+        console.error(`Erreur sur le salon ${channel.name} :`, error);
+        connection.destroy();
+      }
     }
 
     await interaction.reply({ content: '✅ Sonnerie lancée dans les salons vocaux.', ephemeral: true });
