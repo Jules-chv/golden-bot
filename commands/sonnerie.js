@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
 const {
   createAudioPlayer,
   createAudioResource,
@@ -9,23 +8,24 @@ const {
   AudioPlayerStatus
 } = require('@discordjs/voice');
 const path = require('path');
+const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('sonnerie')
-    .setDescription('Déclenche manuellement la sonnerie dans les salons vocaux'),
+    .setDescription('Déclenche la sonnerie dans les salons vocaux filtrés'),
 
   async execute(interaction) {
     const guild = interaction.client.guilds.cache.get(guildId);
 
+    // Filtrer les salons vocaux dans les catégories cibles ou spécifiques
     const voiceChannels = guild.channels.cache.filter(channel =>
+      channel.type === 2 && // GUILD_VOICE
       (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) &&
-      channel.type === 2 // GUILD_VOICE
+      channel.members.size > 0 // au moins une personne
     );
 
     for (const channel of voiceChannels.values()) {
-      if (channel.members.size === 0) continue;
-
       const connection = joinVoiceChannel({
         channelId: channel.id,
         guildId: guild.id,
@@ -49,17 +49,15 @@ module.exports = {
 
         player.on(AudioPlayerStatus.Idle, () => {
           console.log(`⏹️ Audio terminé dans ${channel.name}, déconnexion...`);
-          // Déconnexion du salon uniquement après que l'audio soit terminé
           connection.destroy();
         });
 
-        // Si une erreur se produit avec l'audio, on arrête la connexion
         player.on('error', (error) => {
-          console.error(`❌ Erreur audio dans ${channel.name}:`, error);
+          console.error(`❌ Erreur audio dans ${channel.name} :`, error);
           connection.destroy();
         });
       } catch (error) {
-        console.error(`❌ Erreur dans ${channel.name}:`, error);
+        console.error(`❌ Erreur dans ${channel.name} :`, error);
         connection.destroy();
       }
     }
