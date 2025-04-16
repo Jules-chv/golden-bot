@@ -18,11 +18,11 @@ module.exports = {
   async execute(interaction) {
     const guild = interaction.client.guilds.cache.get(guildId);
 
-    // Filtrer les salons vocaux dans les catégories cibles ou spécifiques
+    // 🔥 Filtrer TOUS les vocaux dans les catégories cibles ou spécifiques
     const voiceChannels = guild.channels.cache.filter(channel =>
       channel.type === 2 && // GUILD_VOICE
       (categorieCible.includes(channel.parentId) || salonsSpecifiques.includes(channel.id)) &&
-      channel.members.size > 0 // au moins une personne
+      channel.members.size > 0 // salon vocal non vide
     );
 
     for (const channel of voiceChannels.values()) {
