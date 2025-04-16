@@ -1,9 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const {
-  guildId,
-  categorieCible,
-  salonsSpecifiques
-} = require('../config.json');
+const { guildId, categorieCible, salonsSpecifiques } = require('../config.json');
 const {
   createAudioPlayer,
   createAudioResource,
@@ -53,15 +49,17 @@ module.exports = {
 
         player.on(AudioPlayerStatus.Idle, () => {
           console.log(`⏹️ Audio terminé dans ${channel.name}, déconnexion...`);
+          // Déconnexion du salon uniquement après que l'audio soit terminé
           connection.destroy();
         });
 
-        player.on('error', error => {
-          console.error(`❌ Erreur audio dans ${channel.name} :`, error);
+        // Si une erreur se produit avec l'audio, on arrête la connexion
+        player.on('error', (error) => {
+          console.error(`❌ Erreur audio dans ${channel.name}:`, error);
           connection.destroy();
         });
       } catch (error) {
-        console.error(`❌ Erreur dans ${channel.name} :`, error);
+        console.error(`❌ Erreur dans ${channel.name}:`, error);
         connection.destroy();
       }
     }
