@@ -23,7 +23,7 @@ async function jouerSonnerie(client, type = null) {
       await entersState(connection, VoiceConnectionStatus.Ready, 5000);
 
       const player = createAudioPlayer();
-      const fileName = type ? `alarme_${type}.mp3` : 'sonnerie.mp3';
+      const fileName = 'sonnerie.mp3';
       const audioPath = path.join(__dirname, '../audios', fileName);
 
       const resource = createAudioResource(audioPath);
